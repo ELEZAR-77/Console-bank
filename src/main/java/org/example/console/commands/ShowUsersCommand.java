@@ -15,7 +15,6 @@ public class ShowUsersCommand implements OperationCommand {
 
     @Override
     public void execute() {
-        System.out.println("chlen");
         System.out.println(userService.showAllUsers());
     }
 
