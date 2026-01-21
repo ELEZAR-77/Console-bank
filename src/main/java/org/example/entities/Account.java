@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 public class Account {
     private Long id;
     private Long userId;
-    private BigDecimal moneyAmount;
+    private int moneyAmount;
 
-    public Account(Long id, Long userId, BigDecimal moneyAmount) {
+    public Account(Long id, Long userId, int moneyAmount) {
         this.id = id;
         this.userId = userId;
         this.moneyAmount = moneyAmount;
@@ -29,11 +29,20 @@ public class Account {
         this.userId = userId;
     }
 
-    public BigDecimal getMoneyAmount() {
+    public int getMoneyAmount() {
         return moneyAmount;
     }
 
-    public void setMoneyAmount(BigDecimal moneyAmount) {
+    public void setMoneyAmount(int moneyAmount) {
         this.moneyAmount = moneyAmount;
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", moneyAmount=" + moneyAmount +
+                '}';
     }
 }
