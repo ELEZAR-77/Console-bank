@@ -2,7 +2,6 @@ package org.example.console.commands;
 
 import org.example.console.OperationCommand;
 import org.example.console.OperationType;
-import org.example.entities.User;
 import org.example.services.UserService;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +15,8 @@ public class ShowUsersCommand implements OperationCommand {
 
     @Override
     public void execute() {
-        for (User user : userService.showAllUsers()) {
-            System.out.println(user);
-        }
+        System.out.println("chlen");
+        System.out.println(userService.showAllUsers());
     }
 
     @Override
