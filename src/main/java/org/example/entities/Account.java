@@ -13,6 +13,11 @@ public class Account {
         this.moneyAmount = moneyAmount;
     }
 
+    public Account(Long id, Long userId) {
+        this.id = id;
+        this.userId = userId;
+    }
+
     public Long getId() {
         return id;
     }

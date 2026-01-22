@@ -1,5 +1,6 @@
 package org.example.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class User {
@@ -10,7 +11,7 @@ public class User {
     public User(Long id, String login, List<Account> accountList) {
         this.id = id;
         this.login = login;
-        this.accountList = accountList;
+        this.accountList = new ArrayList<>(accountList);
     }
 
     public User() {}
@@ -35,8 +36,8 @@ public class User {
         return accountList;
     }
 
-    public void setAccountList(List<Account> accountList) {
-        this.accountList = accountList;
+    public void addAccount(Account account) {
+        accountList.add(account);
     }
 
     @Override

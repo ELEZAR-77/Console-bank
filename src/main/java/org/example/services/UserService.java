@@ -8,6 +8,7 @@ import java.util.List;
 
 @Service
 public class UserService {
+    Long idCounter = 0L;
     private final AccountService accountService;
     private final UserRepository userRepository;
 
@@ -19,10 +20,8 @@ public class UserService {
     public User createUser(String login) {
         if (login == null) throw new IllegalArgumentException("Field can`t be empty!");
 
-        Long idCounter = 0L;
         idCounter++;
-
-        User user = new User(idCounter, login, List.of(accountService.startAccount(idCounter)));
+        User user = new User(idCounter, login, List.of(accountService.createStartAccount(idCounter)));
 
         userRepository.save(user);
         return user;
@@ -30,5 +29,11 @@ public class UserService {
 
     public List<User> showAllUsers() {
         return userRepository.findAll();
+    }
+
+    public User getUserById(Long id) {
+        if (id == null) throw new IllegalArgumentException("Field can`t be empty!");
+
+        return userRepository.findById(id);
     }
 }

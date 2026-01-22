@@ -1,12 +1,15 @@
-package org.example.console.config;
+package org.example.properties;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 import java.util.Scanner;
 
 @Configuration
-public class ConsoleConfig {
+@PropertySource("application.properties")
+public class ApplicationConfiguration {
+
     @Bean
     public Scanner scanner() {
         return new Scanner(System.in);
