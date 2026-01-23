@@ -1,5 +1,6 @@
 package org.example.console;
 
+import org.example.console.exceptions.UnknownOperationExeption;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -45,8 +46,10 @@ public class OperationsConsoleListener implements Runnable{
                 }
 
                 command.execute();
+            } catch (UnknownOperationExeption e) {
+                System.out.println("Unknown Operation!");
             } catch (IllegalArgumentException e) {
-                System.out.println("Unknown operation");
+                System.out.println("Input error: " + e.getMessage());
             }
         }
     }

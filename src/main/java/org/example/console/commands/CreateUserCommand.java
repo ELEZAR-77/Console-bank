@@ -23,6 +23,8 @@ public class CreateUserCommand implements OperationCommand {
         System.out.println("Enter login: ");
         String login = scanner.nextLine();
 
+        if (login == null || login.isEmpty()) throw new IllegalArgumentException("Login cannot be empty!");
+
         System.out.println("User created: " + userService.createUser(login));
     }
 

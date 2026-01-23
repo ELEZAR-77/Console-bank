@@ -2,50 +2,46 @@ package org.example.console.commands;
 
 import org.example.console.OperationCommand;
 import org.example.console.OperationType;
-import org.example.entities.Account;
-import org.example.entities.User;
 import org.example.services.AccountService;
-import org.example.services.UserService;
 import org.springframework.stereotype.Component;
 
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 @Component
-public class CreateAdditionalAccount implements OperationCommand {
+public class CloseAccountCommand implements OperationCommand {
     private final AccountService accountService;
-    private final UserService userService;
     private final Scanner scanner;
 
-    public CreateAdditionalAccount(AccountService accountService, UserService userService, Scanner scanner) {
+    public CloseAccountCommand(AccountService accountService, Scanner scanner) {
         this.accountService = accountService;
-        this.userService = userService;
         this.scanner = scanner;
     }
 
     @Override
     public void execute() {
-        System.out.println("Enter the user id for which to create an account: ");
+        System.out.println("Enter account ID to close: ");
         String input = scanner.nextLine();
 
         try {
             if (input == null || input.trim().isEmpty()) throw new IllegalArgumentException();
 
-            Long userId = Long.parseLong(input);
+            Long accId = Long.parseLong(input);
 
-            User user = userService.getUserById(userId);
-            Account account = accountService.createAdditionalAccount(user);
-
-            System.out.println("New account created with ID:" + account.getId() + " for user: " + user.getLogin());
+            accountService.closeAccount(accId);
+            System.out.println("Account with ID " + accId + " to closed.");
 
         } catch (NumberFormatException e) {
             System.out.println("Please enter a valid number");
         } catch (IllegalArgumentException e) {
-            System.out.println("User ID cannot be empty!");
+            System.out.println("Account ID cannot be empty");
+        } catch (NoSuchElementException e) {
+            System.out.println("No such account exist");
         }
     }
 
     @Override
     public OperationType getOperationType() {
-        return OperationType.ACCOUNT_CREATE;
+        return OperationType.ACCOUNT_CLOSE;
     }
 }

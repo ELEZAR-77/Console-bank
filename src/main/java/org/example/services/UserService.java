@@ -18,7 +18,6 @@ public class UserService {
     }
 
     public User createUser(String login) {
-        if (login == null) throw new IllegalArgumentException("Field can`t be empty!");
 
         idCounter++;
         User user = new User(idCounter, login, List.of(accountService.createStartAccount(idCounter)));
