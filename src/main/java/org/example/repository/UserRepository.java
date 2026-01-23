@@ -22,6 +22,6 @@ public class UserRepository {
         return userList.stream()
                 .filter(u -> u.getId().equals(id))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Element not found"));
     }
 }

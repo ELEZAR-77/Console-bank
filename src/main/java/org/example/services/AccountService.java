@@ -61,4 +61,21 @@ public class AccountService {
         return id;
     }
 
+    public void withdrawMoney(Account account, int money) {
+        if (money > account.getMoneyAmount()) {
+            System.out.println("There are insufficient funds in the account!\nYour amount: " + account.getMoneyAmount());
+            return;
+        }
+
+        account.setMoneyAmount(account.getMoneyAmount() - money);
+        System.out.println("The transaction was successful!\nThe amount in your account is: " + account.getMoneyAmount());
+    }
+
+    public Account findByAccountId(Long id) {
+        return userRepository.findAll().stream()
+                .flatMap(u -> u.getAccountList().stream())
+                .filter(a -> a.getId().equals(id))
+                .findFirst().orElseThrow(() -> new NoSuchElementException("Account not found"));
+    }
+
 }
