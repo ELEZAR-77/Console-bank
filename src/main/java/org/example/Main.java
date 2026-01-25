@@ -13,6 +13,7 @@ public class Main {
 
         OperationsConsoleListener listener = context.getBean(OperationsConsoleListener.class);
 
-        listener.run();
+        Thread consoleThread = new Thread(listener);
+        consoleThread.start();
     }
 }
