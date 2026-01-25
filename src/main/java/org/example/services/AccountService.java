@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,10 @@ public class AccountService {
         for (User user : userRepository.findAll()) {
             List<Account> accounts = user.getAccountList();
 
+            if (accounts.size() == 1) {
+                throw new IllegalArgumentException("You can't close a single account: " + findByAccountId(accId));
+            }
+
             Account accountToClose = accounts.stream()
                     .filter(a -> a.getId().equals(accId))
                     .findFirst()
@@ -62,7 +67,7 @@ public class AccountService {
             return;
         }
 
-        throw new NoSuchElementException();
+        throw new NoSuchElementException("No such account exist");
     }
 
     public Long findFirstFreeAccount() {
@@ -81,8 +86,9 @@ public class AccountService {
 
     public void withdrawMoney(Account account, int amount) {
         if (amount > account.getMoneyAmount()) {
-            System.out.println("There are insufficient funds in the account!\nYour amount: " + account.getMoneyAmount());
-            return;
+            throw new IllegalArgumentException(
+                    "There are insufficient funds in the account!\nYour amount: " + account.getMoneyAmount()
+            );
         }
 
         account.setMoneyAmount(account.getMoneyAmount() - amount);
@@ -94,15 +100,22 @@ public class AccountService {
     }
 
     public void transfer(Account account1, Account account2, int amount) {
-
-        int amountWithCommission = (int) (amount + (amount * properties.getTransferCommission()));
-        account1.setMoneyAmount(account1.getMoneyAmount() - amountWithCommission);
-
-        if (account1.getMoneyAmount() < 0) {
-            System.out.println("Your account is overdrawn: " + account1.getMoneyAmount() + "." + " Please top it up.");
+        if (amount > account1.getMoneyAmount()) {
+            throw new IllegalArgumentException(
+                    "There are insufficient funds in the account!\nYour amount: " + account1.getMoneyAmount()
+            );
+        }
+        if (account1.getMoneyAmount() <= 0) {
+            throw new IllegalArgumentException(
+                    "Cannot transfer not positive amount: " + account1.getMoneyAmount()
+            );
         }
 
-        account2.setMoneyAmount(account2.getMoneyAmount() + amount);
+        int totalAmount = account1.getUserId() != account2.getUserId()
+                ? (int) (amount - amount * properties.getTransferCommission())
+                : amount;
+        account1.setMoneyAmount(account1.getMoneyAmount() - totalAmount);
+        account2.setMoneyAmount(account2.getMoneyAmount() + totalAmount);
     }
 
     public Account findByAccountId(Long id) {

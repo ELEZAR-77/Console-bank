@@ -40,7 +40,7 @@ public class AccountDepositCommand implements OperationCommand {
 
             System.out.println("Amount " + amount + " deposited to account ID:" + accId);
 
-        }catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             System.out.println("Please enter a numerical ID or amount");
         } catch (IllegalArgumentException | NoSuchElementException e) {
             System.out.println(e.getMessage());

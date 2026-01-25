@@ -33,10 +33,8 @@ public class CloseAccountCommand implements OperationCommand {
 
         } catch (NumberFormatException e) {
             System.out.println("Please enter a valid number");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Account ID cannot be empty");
-        } catch (NoSuchElementException e) {
-            System.out.println("No such account exist");
+        } catch (IllegalArgumentException | NoSuchElementException e) {
+            System.out.println(e.getMessage());
         }
     }
 

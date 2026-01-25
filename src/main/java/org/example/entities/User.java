@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Objects;
 
 public class User {
-    private Long id;
-    private String login;
-    private List<Account> accountList;
+    private final Long id;
+    private final String login;
+    private final List<Account> accountList;
 
     public User(Long id, String login, List<Account> accountList) {
         this.id = id;
@@ -15,23 +15,15 @@ public class User {
         this.accountList = new ArrayList<>(accountList);
     }
 
-    public User() {}
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getLogin() {
         return login;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
-    }
 
     public List<Account> getAccountList() {
         return accountList;

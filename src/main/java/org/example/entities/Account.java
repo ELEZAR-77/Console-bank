@@ -3,8 +3,8 @@ package org.example.entities;
 import java.math.BigDecimal;
 
 public class Account {
-    private Long id;
-    private Long userId;
+    private final Long id;
+    private final Long userId;
     private int moneyAmount;
 
     public Account(Long id, Long userId, int moneyAmount) {
@@ -22,16 +22,8 @@ public class Account {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Long getUserId() {
         return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public int getMoneyAmount() {
