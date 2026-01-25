@@ -2,6 +2,7 @@ package org.example.entities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class User {
     private Long id;
@@ -47,5 +48,17 @@ public class User {
                 ", login='" + login + '\'' +
                 ", accountList=" + accountList +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        User user = (User) object;
+        return Objects.equals(getLogin(), user.getLogin());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getLogin());
     }
 }

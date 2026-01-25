@@ -4,6 +4,7 @@ import org.example.entities.User;
 import org.example.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import javax.management.InstanceAlreadyExistsException;
 import java.util.List;
 
 @Service
@@ -17,10 +18,15 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser(String login) {
+    public User createUser(String login) throws InstanceAlreadyExistsException {
 
         idCounter++;
         User user = new User(idCounter, login, List.of(accountService.createStartAccount(idCounter)));
+
+        boolean isLoginExist = userRepository.findAll().stream().anyMatch(u -> u.equals(user));
+        if (isLoginExist) {
+            throw new InstanceAlreadyExistsException("This login already exist!");
+        }
 
         userRepository.save(user);
         return user;

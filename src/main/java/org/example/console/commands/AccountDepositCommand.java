@@ -10,21 +10,22 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 @Component
-public class AccountWithdrawCommand implements OperationCommand {
+public class AccountDepositCommand implements OperationCommand {
     private final AccountService accountService;
     private final Scanner scanner;
 
-    public AccountWithdrawCommand(AccountService accountService, Scanner scanner) {
+    public AccountDepositCommand(AccountService accountService, Scanner scanner) {
         this.accountService = accountService;
         this.scanner = scanner;
     }
 
+
     @Override
     public void execute() {
-        System.out.println("Enter account ID to withdraw from:");
+        System.out.println("Enter account ID:");
         String inputId = scanner.nextLine();
 
-        System.out.println("Enter amount to withdraw: ");
+        System.out.println("Enter amount to deposit: ");
         String inputAmount = scanner.nextLine();
 
         try {
@@ -35,8 +36,11 @@ public class AccountWithdrawCommand implements OperationCommand {
             int amount = Integer.parseInt(inputAmount);
 
             Account account = accountService.findByAccountId(accId);
-            accountService.withdrawMoney(account, amount);
-        } catch (NumberFormatException e) {
+            accountService.deposit(account, amount);
+
+            System.out.println("Amount " + amount + " deposited to account ID:" + accId);
+
+        }catch (NumberFormatException e) {
             System.out.println("Please enter a numerical ID or amount");
         } catch (IllegalArgumentException | NoSuchElementException e) {
             System.out.println(e.getMessage());
@@ -45,6 +49,6 @@ public class AccountWithdrawCommand implements OperationCommand {
 
     @Override
     public OperationType getOperationType() {
-        return OperationType.ACCOUNT_WITHDRAW;
+        return OperationType.ACCOUNT_DEPOSIT;
     }
 }

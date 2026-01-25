@@ -7,6 +7,7 @@ import org.example.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,11 +38,28 @@ public class AccountService {
 
     public void closeAccount(Long accId) {
         for (User user : userRepository.findAll()) {
-            boolean removed = user.getAccountList()
-                    .removeIf(a -> a.getId().equals(accId));
-            if (removed) {
-                return;
+            List<Account> accounts = user.getAccountList();
+
+            Account accountToClose = accounts.stream()
+                    .filter(a -> a.getId().equals(accId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (accountToClose == null){
+                continue;
             }
+
+            if (accounts.size() > 1) {
+                Account targetAccount = accounts.stream()
+                        .filter(a -> !a.getId().equals(accId))
+                        .findFirst()
+                        .orElseThrow();
+
+                targetAccount.setMoneyAmount(accountToClose.getMoneyAmount());
+            }
+
+            accounts.remove(accountToClose);
+            return;
         }
 
         throw new NoSuchElementException();
@@ -61,14 +79,30 @@ public class AccountService {
         return id;
     }
 
-    public void withdrawMoney(Account account, int money) {
-        if (money > account.getMoneyAmount()) {
+    public void withdrawMoney(Account account, int amount) {
+        if (amount > account.getMoneyAmount()) {
             System.out.println("There are insufficient funds in the account!\nYour amount: " + account.getMoneyAmount());
             return;
         }
 
-        account.setMoneyAmount(account.getMoneyAmount() - money);
+        account.setMoneyAmount(account.getMoneyAmount() - amount);
         System.out.println("The transaction was successful!\nThe amount in your account is: " + account.getMoneyAmount());
+    }
+
+    public void deposit(Account account, int amount) {
+        account.setMoneyAmount(account.getMoneyAmount() + amount);
+    }
+
+    public void transfer(Account account1, Account account2, int amount) {
+
+        int amountWithCommission = (int) (amount + (amount * properties.getTransferCommission()));
+        account1.setMoneyAmount(account1.getMoneyAmount() - amountWithCommission);
+
+        if (account1.getMoneyAmount() < 0) {
+            System.out.println("Your account is overdrawn: " + account1.getMoneyAmount() + "." + " Please top it up.");
+        }
+
+        account2.setMoneyAmount(account2.getMoneyAmount() + amount);
     }
 
     public Account findByAccountId(Long id) {

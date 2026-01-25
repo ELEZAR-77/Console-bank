@@ -5,6 +5,7 @@ import org.example.console.OperationType;
 import org.example.services.UserService;
 import org.springframework.stereotype.Component;
 
+import javax.management.InstanceAlreadyExistsException;
 import java.util.Scanner;
 
 @Component
@@ -23,9 +24,13 @@ public class CreateUserCommand implements OperationCommand {
         System.out.println("Enter login: ");
         String login = scanner.nextLine();
 
-        if (login == null || login.isEmpty()) throw new IllegalArgumentException("Login cannot be empty!");
+        try {
+            if (login == null || login.isEmpty()) throw new IllegalArgumentException("Login cannot be empty!");
 
-        System.out.println("User created: " + userService.createUser(login));
+            System.out.println("User created: " + userService.createUser(login));
+        } catch (InstanceAlreadyExistsException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override
