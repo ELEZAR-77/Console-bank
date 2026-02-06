@@ -9,9 +9,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 public class AccountService {
@@ -71,14 +69,16 @@ public class AccountService {
         }
 
         transactionalHandler.executeTransactional(session -> {
-            account.setMoneyAmount(account.getMoneyAmount() - amount);
-            System.out.println("The transaction was successful!\nThe amount in your account is: " + account.getMoneyAmount());
+            var managedAccount = session.merge(account);
+            managedAccount.setMoneyAmount(managedAccount.getMoneyAmount() - amount);
+            System.out.println("The transaction was successful!\nThe amount in your account is: " + managedAccount.getMoneyAmount());
         });
     }
 
     public void deposit(Account account, int amount) {
         transactionalHandler.executeTransactional(session -> {
-            account.setMoneyAmount(account.getMoneyAmount() + amount);
+            var managedAccount = session.merge(account);
+            managedAccount.setMoneyAmount(managedAccount.getMoneyAmount() + amount);
         });
     }
 
@@ -94,11 +94,17 @@ public class AccountService {
             );
         }
 
-        int totalAmount = account1.getUser() != account2.getUser()
+        int totalAmount = !Objects.equals(account1.getUser().getId(), account2.getUser().getId())
                 ? (int) (amount - amount * properties.getTransferCommission())
                 : amount;
-        account1.setMoneyAmount(account1.getMoneyAmount() - totalAmount);
-        account2.setMoneyAmount(account2.getMoneyAmount() + totalAmount);
+
+        transactionalHandler.executeTransactional(session -> {
+            var manageFrom = session.merge(account1);
+            var manageTo = session.merge(account2);
+
+            manageFrom.setMoneyAmount(manageFrom.getMoneyAmount() - totalAmount);
+            manageTo.setMoneyAmount(manageTo.getMoneyAmount() + totalAmount);
+        });
     }
 
     public List<Account> getAccountList() {
@@ -111,13 +117,6 @@ public class AccountService {
     public Account findByAccountId(Long id) {
         return transactionalHandler.executeTransactional(session -> {
             return session.find(Account.class, id);
-        });
-    }
-
-    public void deleteAccountById(Long id) {
-        transactionalHandler.executeTransactional(session -> {
-            var accForDelete = session.find(Account.class, id);
-            session.remove(accForDelete);
         });
     }
 }

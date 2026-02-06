@@ -23,8 +23,8 @@ public class HiberConfig {
                 .setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5434/postgres")
                 .setProperty("hibernate.connection.username", "postgres")
                 .setProperty("hibernate.connection.password", "2222")
-                .setProperty("hibernate.show_sql", "true")
-                .setProperty("hibernate.hbm2ddl.auto", "create-drop");
+                .setProperty("hibernate.show_sql", "false")
+                .setProperty("hibernate.hbm2ddl.auto", "update");
 
         return configuration.buildSessionFactory();
     }
