@@ -3,56 +3,46 @@ package org.example.services;
 import org.example.entities.Account;
 import org.example.entities.User;
 import org.example.properties.AccountProperties;
-import org.example.repository.UserRepository;
+import org.example.transactional.TransactionalHandler;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
     private final AccountProperties properties;
-    private final UserRepository userRepository;
-    private Long idCounter = 0L;
+    private final TransactionalHandler transactionalHandler;
+    private final SessionFactory sessionFactory;
 
-    public AccountService(AccountProperties properties, UserRepository userRepository) {
+    public AccountService(AccountProperties properties, TransactionalHandler transactionalHandler, SessionFactory sessionFactory) {
         this.properties = properties;
-        this.userRepository = userRepository;
+        this.transactionalHandler = transactionalHandler;
+        this.sessionFactory = sessionFactory;
     }
 
-    public Account createStartAccount(Long userId) {
-        idCounter = findFirstFreeAccount();
-        return new Account(idCounter, userId, properties.getDefaultAmount());
+    public Account createStartAccount(User user) {
+        return new Account(properties.getDefaultAmount(), user);
     }
 
     public Account createAdditionalAccount(User user) {
-        idCounter = findFirstFreeAccount();
-
-        Account account = new Account(idCounter, user.getId());
-        user.addAccount(account);
-        return account;
+        return transactionalHandler.executeTransactional(session -> {
+            var account = new Account(0, user);
+            session.persist(account);
+            return account;
+        });
     }
 
     public void closeAccount(Long accId) {
-        for (User user : userRepository.findAll()) {
-            List<Account> accounts = user.getAccountList();
+            List<Account> accounts = getAccountList();
 
             if (accounts.size() == 1) {
                 throw new IllegalArgumentException("You can't close a single account: " + findByAccountId(accId));
             }
 
-            Account accountToClose = accounts.stream()
-                    .filter(a -> a.getId().equals(accId))
-                    .findFirst()
-                    .orElse(null);
-
-            if (accountToClose == null){
-                continue;
-            }
+            Account accountToClose = findByAccountId(accId);
 
             if (accounts.size() > 1) {
                 Account targetAccount = accounts.stream()
@@ -60,28 +50,15 @@ public class AccountService {
                         .findFirst()
                         .orElseThrow();
 
-                targetAccount.setMoneyAmount(accountToClose.getMoneyAmount());
+                transactionalHandler.executeTransactional(session -> {
+                    var managedTarget = session.merge(targetAccount);
+
+                    managedTarget.setMoneyAmount(
+                            managedTarget.getMoneyAmount() + accountToClose.getMoneyAmount()
+                    );
+                    session.remove(accountToClose);
+                });
             }
-
-            accounts.remove(accountToClose);
-            return;
-        }
-
-        throw new NoSuchElementException("No such account exist");
-    }
-
-    public Long findFirstFreeAccount() {
-        Set<Long> usedIds = userRepository.findAll().stream()
-                .flatMap(u -> u.getAccountList().stream())
-                .map(Account::getId)
-                .collect(Collectors.toSet());
-
-        Long id = 1L;
-
-        while (usedIds.contains(id)) {
-            id++;
-        }
-        return id;
     }
 
     public void withdrawMoney(Account account, int amount) {
@@ -91,12 +68,18 @@ public class AccountService {
             );
         }
 
-        account.setMoneyAmount(account.getMoneyAmount() - amount);
-        System.out.println("The transaction was successful!\nThe amount in your account is: " + account.getMoneyAmount());
+        transactionalHandler.executeTransactional(session -> {
+            var managedAccount = session.merge(account);
+            managedAccount.setMoneyAmount(managedAccount.getMoneyAmount() - amount);
+            System.out.println("The transaction was successful!\nThe amount in your account is: " + managedAccount.getMoneyAmount());
+        });
     }
 
     public void deposit(Account account, int amount) {
-        account.setMoneyAmount(account.getMoneyAmount() + amount);
+        transactionalHandler.executeTransactional(session -> {
+            var managedAccount = session.merge(account);
+            managedAccount.setMoneyAmount(managedAccount.getMoneyAmount() + amount);
+        });
     }
 
     public void transfer(Account account1, Account account2, int amount) {
@@ -111,18 +94,29 @@ public class AccountService {
             );
         }
 
-        int totalAmount = account1.getUserId() != account2.getUserId()
+        int totalAmount = !Objects.equals(account1.getUser().getId(), account2.getUser().getId())
                 ? (int) (amount - amount * properties.getTransferCommission())
                 : amount;
-        account1.setMoneyAmount(account1.getMoneyAmount() - totalAmount);
-        account2.setMoneyAmount(account2.getMoneyAmount() + totalAmount);
+
+        transactionalHandler.executeTransactional(session -> {
+            var manageFrom = session.merge(account1);
+            var manageTo = session.merge(account2);
+
+            manageFrom.setMoneyAmount(manageFrom.getMoneyAmount() - totalAmount);
+            manageTo.setMoneyAmount(manageTo.getMoneyAmount() + totalAmount);
+        });
+    }
+
+    public List<Account> getAccountList() {
+        try(Session session = sessionFactory.openSession()) {
+            return session.createQuery("SELECT a FROM Account a", Account.class)
+                    .list();
+        }
     }
 
     public Account findByAccountId(Long id) {
-        return userRepository.findAll().stream()
-                .flatMap(u -> u.getAccountList().stream())
-                .filter(a -> a.getId().equals(id))
-                .findFirst().orElseThrow(() -> new NoSuchElementException("Account not found"));
+        return transactionalHandler.executeTransactional(session -> {
+            return session.find(Account.class, id);
+        });
     }
-
 }

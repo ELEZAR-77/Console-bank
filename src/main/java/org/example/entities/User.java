@@ -1,20 +1,30 @@
 package org.example.entities;
 
+import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Entity
+@Table(name = "users")
 public class User {
-    private final Long id;
-    private final String login;
-    private final List<Account> accountList;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public User(Long id, String login, List<Account> accountList) {
-        this.id = id;
+    @Column(name = "user_login")
+    private String login;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    private List<Account> accountList;
+
+    public User(String login) {
         this.login = login;
-        this.accountList = new ArrayList<>(accountList);
     }
 
+    public User() {
+    }
 
     public Long getId() {
         return id;

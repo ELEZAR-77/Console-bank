@@ -1,7 +1,9 @@
 package org.example.services;
 
 import org.example.entities.User;
-import org.example.repository.UserRepository;
+import org.example.transactional.TransactionalHandler;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Service;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -11,34 +13,45 @@ import java.util.List;
 public class UserService {
     Long idCounter = 0L;
     private final AccountService accountService;
-    private final UserRepository userRepository;
+    private final TransactionalHandler transactionalHandler;
+    private final SessionFactory sessionFactory;
 
-    public UserService(AccountService accountService, UserRepository userRepository) {
+    public UserService(AccountService accountService, TransactionalHandler transactionalHandler, SessionFactory sessionFactory) {
         this.accountService = accountService;
-        this.userRepository = userRepository;
+        this.transactionalHandler = transactionalHandler;
+        this.sessionFactory = sessionFactory;
     }
 
     public User createUser(String login) throws InstanceAlreadyExistsException {
 
-        idCounter++;
-        User user = new User(idCounter, login, List.of(accountService.createStartAccount(idCounter)));
+        User user = new User(login);
 
-        boolean isLoginExist = userRepository.findAll().stream().anyMatch(u -> u.equals(user));
+        boolean isLoginExist = showAllUsers().stream().anyMatch(u -> u.equals(user));
         if (isLoginExist) {
             throw new InstanceAlreadyExistsException("This login already exist!");
         }
 
-        userRepository.save(user);
-        return user;
+        return transactionalHandler.executeTransactional(session -> {
+            session.persist(user);
+            session.persist(accountService.createStartAccount(user));
+            return user;
+        });
     }
 
     public List<User> showAllUsers() {
-        return userRepository.findAll();
+        return transactionalHandler.executeTransactional(session -> {
+            return session.createQuery(
+                    """
+                    SELECT u FROM User u
+                    left join fetch u.accountList a
+                      """, User.class)
+                    .list();
+        });
     }
 
     public User getUserById(Long id) {
-        if (id == null) throw new IllegalArgumentException("Field can`t be empty!");
-
-        return userRepository.findById(id);
+        try(Session session = sessionFactory.openSession()) {
+            return session.find(User.class, id);
+        }
     }
 }
