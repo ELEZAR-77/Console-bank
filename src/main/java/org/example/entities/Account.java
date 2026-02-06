@@ -1,29 +1,37 @@
 package org.example.entities;
 
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "accounts")
 public class Account {
-    private final Long id;
-    private final Long userId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "money_amount")
     private int moneyAmount;
 
-    public Account(Long id, Long userId, int moneyAmount) {
-        this.id = id;
-        this.userId = userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    public Account(int moneyAmount, User user) {
         this.moneyAmount = moneyAmount;
+        this.user = user;
     }
 
-    public Account(Long id, Long userId) {
-        this.id = id;
-        this.userId = userId;
+    public Account() {
     }
 
     public Long getId() {
         return id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
     public int getMoneyAmount() {
@@ -38,7 +46,6 @@ public class Account {
     public String toString() {
         return "Account{" +
                 "id=" + id +
-                ", userId=" + userId +
                 ", moneyAmount=" + moneyAmount +
                 '}';
     }
